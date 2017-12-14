@@ -13,24 +13,37 @@
 # limitations under the License.
 
 #import webapp2
+import sched # Scheduler
+#import time, datetime
+import time
 
-g_iSampleRateSeconds = 3
-
-### Adding a scheduler ###
-import sched, time
+# Global Variables
 g_oScheduler = sched.scheduler(time.time, time.sleep)
+g_iSampleRateSeconds = 3
+g_oMarketOpens = time.strptime("Wed, 13 Dec 2017 21:00:00", "%a, %d %b %Y %H:%M:%S")
+g_oMarketMidDay = time.strptime("Wed, 13 Dec 2017 21:20:00", "%a, %d %b %Y %H:%M:%S")
+g_oMarketCloses = time.strptime("Wed, 13 Dec 2017 21:40:00", "%a, %d %b %Y %H:%M:%S")
+g_iMin = 0
+g_oSimDate = time.strptime("Wed, 13 Dec 2017 21:" + str(g_iMin) + ":00", "%a, %d %b %Y %H:%M:%S")
 #######################################################
-
 
 ### Running Polling Loop ###
 def g_pollingLoop(_oScheduler): 
     
+	# Global
+	global g_iMin
+
     # Check if it is the time of day to sample stock price (open market, mid-day, close market)
 	print "Run PollingLoop"
-    	#IF (open market, mid-day, close market)
-    	if True:
+    	#IF (open market, mid-day, close market) / time.gmtime() -> Current time/date
+    	oSimDate = time.strptime("Wed, 13 Dec 2017 21:" + str(g_iMin) + ":00", "%a, %d %b %Y %H:%M:%S")
+    	g_iMin = g_iMin + 5 
+    	if g_iMin == 50:
+    		g_iMin = 0
+
+    	if g_isItTime2Sample(oSimDate):
     		# Sample Data
-    		print "Sample Data Point"
+    		print "Sample Data Point" + str(oSimDate.tm_min)
     		# IF Enough Data Samples
     		if True:
     			print "Check for Model"
@@ -42,6 +55,18 @@ def g_pollingLoop(_oScheduler):
 		# ELSE continue
 	# Call PollingLoop again and for ever    
 	g_oScheduler.enter(g_iSampleRateSeconds, 1, g_pollingLoop, (_oScheduler,))
+
+def g_isItTime2Sample(_oCurTime):
+
+	# Global
+	global g_oMarketOpens
+	global g_oMarketMidDay
+	global g_oMarketCloses
+
+	if _oCurTime.tm_min == g_oMarketOpens.tm_min or _oCurTime.tm_min == g_oMarketMidDay.tm_min or _oCurTime.tm_min == g_oMarketCloses.tm_min:
+		return True
+	else:
+		return False
 
 
 #######################################################
