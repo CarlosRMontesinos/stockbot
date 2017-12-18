@@ -25,6 +25,9 @@ g_oMarketMidDay = time.strptime("Wed, 13 Dec 2017 21:20:00", "%a, %d %b %Y %H:%M
 g_oMarketCloses = time.strptime("Wed, 13 Dec 2017 21:40:00", "%a, %d %b %Y %H:%M:%S")
 g_iMin = 0
 g_oSimDate = time.strptime("Wed, 13 Dec 2017 21:" + str(g_iMin) + ":00", "%a, %d %b %Y %H:%M:%S")
+
+DATA_POINTS_NEEDED = 3
+g_iDataPointsSampled = 0
 #######################################################
 
 ### Running Polling Loop ###
@@ -41,33 +44,67 @@ def g_pollingLoop(_oScheduler):
     	if g_iMin == 50:
     		g_iMin = 0
 
+        # Check if it is time to get data
     	if g_isItTime2Sample(oSimDate):
-    		# Sample Data
-    		print "Sample Data Point" + str(oSimDate.tm_min)
+    		
+            # Sample Data
+    		g_sampleDataPoint()
+
     		# IF Enough Data Samples
-    		if True:
-    			print "Check for Model"
-    			# IF Model
-    			if True:
-    				print "Predict"
+    		if g_gotEnoughSamples():
+
+    			print "Operate on data collected"
+
+    			# IF we have a model ready
+    			if g_readyToPredict():
+
+                    # Apply model and predict
+					g_predictDataPoint()
+
     			# ELSE continue
     		# ELSE continue	
 		# ELSE continue
 	# Call PollingLoop again and for ever    
 	g_oScheduler.enter(g_iSampleRateSeconds, 1, g_pollingLoop, (_oScheduler,))
 
+
 def g_isItTime2Sample(_oCurTime):
 
-	# Global
-	global g_oMarketOpens
-	global g_oMarketMidDay
-	global g_oMarketCloses
+    # Global
+    global g_oMarketOpens
+    global g_oMarketMidDay
+    global g_oMarketCloses
+    global g_iDataPointsSampled
 
-	if _oCurTime.tm_min == g_oMarketOpens.tm_min or _oCurTime.tm_min == g_oMarketMidDay.tm_min or _oCurTime.tm_min == g_oMarketCloses.tm_min:
-		return True
-	else:
-		return False
+    if _oCurTime.tm_min == g_oMarketOpens.tm_min or _oCurTime.tm_min == g_oMarketMidDay.tm_min or _oCurTime.tm_min == g_oMarketCloses.tm_min:
+    	g_iDataPointsSampled = g_iDataPointsSampled + 1 # Keep track of the number of data points sampled
+        return True
+    else:
+    	return False
 
+def g_sampleDataPoint():
+
+    print "Sample Data Point"
+
+def g_gotEnoughSamples():
+
+    # Global
+    global g_iDataPointsSampled
+    global DATA_POINTS_NEEDED
+
+    if g_iDataPointsSampled == DATA_POINTS_NEEDED:
+        g_iDataPointsSampled = 0 # Reset number of samples
+        return True
+    else:
+        return False
+
+def g_readyToPredict():
+
+    return True
+
+def g_predictDataPoint():
+
+    print "Predict thr future...!!!"
 
 #######################################################
 ### Start Scheduler ###
