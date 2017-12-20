@@ -19,15 +19,23 @@ import json
 
 # Global Variables
 
-g_bSimulating = False
+g_bSimulating = True
 
 g_oScheduler = sched.scheduler(time.time, time.sleep)
-g_iSampleRateSeconds = 3
+g_iSampleRateSeconds = 3 #Seconds
+
+g_oMarketOpens = time.strptime("06:35:00", "%H:%M:%S") # PST
+g_oMarketMidDay = time.strptime("09:30:00", "%H:%M:%S") # PST
+g_oMarketCloses = time.strptime("12:55:00", "%H:%M:%S") # PST
+
+
 g_oSimMarketOpens = time.strptime("Wed, 13 Dec 2017 21:00:00", "%a, %d %b %Y %H:%M:%S")
 g_oSimMarketMidDay = time.strptime("Wed, 13 Dec 2017 21:20:00", "%a, %d %b %Y %H:%M:%S")
 g_oSimMarketCloses = time.strptime("Wed, 13 Dec 2017 21:40:00", "%a, %d %b %Y %H:%M:%S")
+
+g_iHr = 6
 g_iMin = 0
-g_oSimDate = time.strptime("Wed, 13 Dec 2017 21:" + str(g_iMin) + ":00", "%a, %d %b %Y %H:%M:%S")
+g_oSimDate = time.strptime("Wed, 13 Dec 2017 " + str(g_iHr) + ":" + str(g_iMin) + ":00", "%a, %d %b %Y %H:%M:%S")
 
 DATA_POINTS_NEEDED = 3
 g_iDataPointsSampled = 0
@@ -52,10 +60,10 @@ g_dicTestDbRecord = {"Ticker":"NVDA",
 def g_pollingLoop(_oScheduler): 
 	
 	# Get current date
-	oCurDate = g_getCurDateTime()
+	oCurDateTime = g_getCurDateTime() # -> TO DO
 
 	# Check if it is time to get data (open market, mid-day, close market)
-	if g_isItTime2Sample(oCurDate): # -> TO DO
+	if g_isItTime2Sample(oCurDateTime): # -> TO DO
 		
 		# Sample Data
 		g_sampleDataPoint() # -> TO DO
@@ -87,7 +95,7 @@ def g_getCurDateTime():
 	global g_bSimulating
 
 	if g_bSimulating == True:
-		oCurDate = g_getSimDate()
+		oCurDate = g_getSimDateTime()
 	else:
 		oCurDate = time.gmtime()
 
@@ -149,14 +157,17 @@ def g_predictDataPoint():
 
 	print "Predict the future...!!!"
 
-def g_getSimDate():
+def g_getSimDateTime():
 
 	# Global
+	global g_iHr
 	global g_iMin
 
 	# Generate simulated date/time info
-	oSimDate = time.strptime("Wed, 13 Dec 2017 21:" + str(g_iMin) + ":00", "%a, %d %b %Y %H:%M:%S")
+	oSimDate = time.strptime("Wed, 13 Dec 2017 " + str(g_iHr) + ":" + str(g_iMin) + ":00", "%a, %d %b %Y %H:%M:%S")
+	g_iHr = g_iHr + 10
 	g_iMin = g_iMin + 10
+	
 	if g_iMin == 60:
 		g_iMin = 0
 
