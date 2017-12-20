@@ -18,11 +18,14 @@ import time
 import json
 
 # Global Variables
+
+g_bSimulating = False
+
 g_oScheduler = sched.scheduler(time.time, time.sleep)
 g_iSampleRateSeconds = 3
-g_oMarketOpens = time.strptime("Wed, 13 Dec 2017 21:00:00", "%a, %d %b %Y %H:%M:%S")
-g_oMarketMidDay = time.strptime("Wed, 13 Dec 2017 21:20:00", "%a, %d %b %Y %H:%M:%S")
-g_oMarketCloses = time.strptime("Wed, 13 Dec 2017 21:40:00", "%a, %d %b %Y %H:%M:%S")
+g_oSimMarketOpens = time.strptime("Wed, 13 Dec 2017 21:00:00", "%a, %d %b %Y %H:%M:%S")
+g_oSimMarketMidDay = time.strptime("Wed, 13 Dec 2017 21:20:00", "%a, %d %b %Y %H:%M:%S")
+g_oSimMarketCloses = time.strptime("Wed, 13 Dec 2017 21:40:00", "%a, %d %b %Y %H:%M:%S")
 g_iMin = 0
 g_oSimDate = time.strptime("Wed, 13 Dec 2017 21:" + str(g_iMin) + ":00", "%a, %d %b %Y %H:%M:%S")
 
@@ -49,10 +52,9 @@ g_dicTestDbRecord = {"Ticker":"NVDA",
 def g_pollingLoop(_oScheduler): 
 	
 	# Get current date
-	# oCurDate = 
-	oCurDate = g_getSimDate()
+	oCurDate = g_getCurDateTime()
 
-	# Check if it is time to get data
+	# Check if it is time to get data (open market, mid-day, close market)
 	if g_isItTime2Sample(oCurDate): # -> TO DO
 		
 		# Sample Data
@@ -79,18 +81,38 @@ def g_pollingLoop(_oScheduler):
 	g_oScheduler.enter(g_iSampleRateSeconds, 1, g_pollingLoop, (_oScheduler,))
 
 
+def g_getCurDateTime():
+
+	# Global
+	global g_bSimulating
+
+	if g_bSimulating == True:
+		oCurDate = g_getSimDate()
+	else:
+		oCurDate = time.gmtime()
+
+	print time.strftime("%Y-%m-%d %H:%M:%S", oCurDate)
+	return oCurDate
+
 def g_isItTime2Sample(_oCurTime):
 
 	# Global
-	global g_oMarketOpens
-	global g_oMarketMidDay
-	global g_oMarketCloses
+	global g_oSimMarketOpens
+	global g_oSimMarketMidDay
+	global g_oSimMarketCloses
 	global g_iDataPointsSampled
+	global g_bSimulating
 
-	if _oCurTime.tm_min == g_oMarketOpens.tm_min or _oCurTime.tm_min == g_oMarketMidDay.tm_min or _oCurTime.tm_min == g_oMarketCloses.tm_min:
-		g_iDataPointsSampled = g_iDataPointsSampled + 1 # Keep track of the number of data points sampled
-		return True
+	if g_bSimulating == True:
+
+		if _oCurTime.tm_min == g_oSimMarketOpens.tm_min or _oCurTime.tm_min == g_oSimMarketMidDay.tm_min or _oCurTime.tm_min == g_oSimMarketCloses.tm_min:
+			g_iDataPointsSampled = g_iDataPointsSampled + 1 # Keep track of the number of data points sampled
+			return True
+		else:
+			return False
+		
 	else:
+		print "Not simulating in: g_isItTime2Sample()"
 		return False
 
 def g_sampleDataPoint():
@@ -114,10 +136,10 @@ def g_operateOnSamples():
 	# Global
 	global g_sTestDbRecord
 
-	print "Operate on data collected"
+	#print "Operate on data collected"
 	jTestDbRecord = json.dumps(g_dicTestDbRecord)
 	oTestDbRecord = json.loads(jTestDbRecord)
-	print "Ticker: " + oTestDbRecord["Ticker"] + " $" + str(oTestDbRecord["DayAvg"])
+	#print "Ticker: " + oTestDbRecord["Ticker"] + " $" + str(oTestDbRecord["DayAvg"])
 
 def g_readyToPredict():
 
@@ -132,12 +154,10 @@ def g_getSimDate():
 	# Global
 	global g_iMin
 
-	# Check if it is the time of day to sample stock price (open market, mid-day, close market)
-	print "Run PollingLoop"
-	#IF (open market, mid-day, close market) / time.gmtime() -> Current time/date
+	# Generate simulated date/time info
 	oSimDate = time.strptime("Wed, 13 Dec 2017 21:" + str(g_iMin) + ":00", "%a, %d %b %Y %H:%M:%S")
-	g_iMin = g_iMin + 5 
-	if g_iMin == 50:
+	g_iMin = g_iMin + 10
+	if g_iMin == 60:
 		g_iMin = 0
 
 	return oSimDate
