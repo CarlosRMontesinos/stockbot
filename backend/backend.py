@@ -14,29 +14,27 @@
 
 #import webapp2
 import sched # Scheduler
+import datetime
 import time
 import json
 
 # Global Variables
-
 g_bSimulating = True
 
 g_oScheduler = sched.scheduler(time.time, time.sleep)
 g_iSampleRateSeconds = 3 #Seconds
 
-g_oMarketOpens = time.strptime("06:35:00", "%H:%M:%S") # PST
-g_oMarketMidDay = time.strptime("09:30:00", "%H:%M:%S") # PST
-g_oMarketCloses = time.strptime("12:55:00", "%H:%M:%S") # PST
+# Times to sample stock market (PST)
+g_oMarketOpens = datetime.datetime(year=1900, month=1, day=1, hour=6, minute=35, second=0, microsecond=0)
+g_oMarketMidDay = datetime.datetime(year=1900, month=1, day=1, hour=9, minute=45, second=0, microsecond=0)
+g_oMarketCloses = datetime.datetime(year=1900, month=1, day=1, hour=12, minute=55, second=0, microsecond=0)
 
+# Simulation Variables
+g_oSimStartDate = datetime.datetime(year=2017, month=12, day=18, hour=5, minute=00, second=0, microsecond=0)
+g_oSimDateTimeDelta = datetime.timedelta(days=0, hours=0, minutes=0, seconds=5700, microseconds=0)
+g_iDeltaMult = 0
 
-g_oSimMarketOpens = time.strptime("Wed, 13 Dec 2017 21:00:00", "%a, %d %b %Y %H:%M:%S")
-g_oSimMarketMidDay = time.strptime("Wed, 13 Dec 2017 21:20:00", "%a, %d %b %Y %H:%M:%S")
-g_oSimMarketCloses = time.strptime("Wed, 13 Dec 2017 21:40:00", "%a, %d %b %Y %H:%M:%S")
-
-g_iHr = 6
-g_iMin = 0
-g_oSimDate = time.strptime("Wed, 13 Dec 2017 " + str(g_iHr) + ":" + str(g_iMin) + ":00", "%a, %d %b %Y %H:%M:%S")
-
+# Data sample variables
 DATA_POINTS_NEEDED = 3
 g_iDataPointsSampled = 0
 
@@ -58,7 +56,7 @@ g_dicTestDbRecord = {"Ticker":"NVDA",
 
 ### Running Polling Loop ###
 def g_pollingLoop(_oScheduler): 
-	
+
 	# Get current date
 	oCurDateTime = g_getCurDateTime() # -> TO DO
 
@@ -99,21 +97,21 @@ def g_getCurDateTime():
 	else:
 		oCurDate = time.gmtime()
 
-	print time.strftime("%Y-%m-%d %H:%M:%S", oCurDate)
+	print oCurDate
 	return oCurDate
 
 def g_isItTime2Sample(_oCurTime):
 
 	# Global
-	global g_oSimMarketOpens
-	global g_oSimMarketMidDay
-	global g_oSimMarketCloses
+	global g_oMarketOpens
+	global g_oMarketMidDay
+	global g_oMarketCloses
 	global g_iDataPointsSampled
 	global g_bSimulating
 
 	if g_bSimulating == True:
 
-		if _oCurTime.tm_min == g_oSimMarketOpens.tm_min or _oCurTime.tm_min == g_oSimMarketMidDay.tm_min or _oCurTime.tm_min == g_oSimMarketCloses.tm_min:
+		if _oCurTime.minute == g_oMarketOpens.minute or _oCurTime.minute == g_oMarketMidDay.minute or _oCurTime.minute == g_oMarketCloses.minute:
 			g_iDataPointsSampled = g_iDataPointsSampled + 1 # Keep track of the number of data points sampled
 			return True
 		else:
@@ -160,16 +158,16 @@ def g_predictDataPoint():
 def g_getSimDateTime():
 
 	# Global
-	global g_iHr
-	global g_iMin
+	global g_oSimStartDate
+	global g_oSimDateTimeDelta
+	global g_iDeltaMult
 
 	# Generate simulated date/time info
-	oSimDate = time.strptime("Wed, 13 Dec 2017 " + str(g_iHr) + ":" + str(g_iMin) + ":00", "%a, %d %b %Y %H:%M:%S")
-	g_iHr = g_iHr + 10
-	g_iMin = g_iMin + 10
+	oSimDate = g_oSimStartDate + g_iDeltaMult * g_oSimDateTimeDelta
+	g_iDeltaMult = g_iDeltaMult + 1
 	
-	if g_iMin == 60:
-		g_iMin = 0
+	if g_iDeltaMult == 7:
+		g_iDeltaMult = 0
 
 	return oSimDate
 
