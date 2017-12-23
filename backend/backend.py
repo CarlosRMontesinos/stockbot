@@ -38,6 +38,8 @@ g_iDeltaMult = 0
 DATA_POINTS_NEEDED = 3
 g_iDataPointsSampled = 0
 
+# Data base
+g_sTicker = "NVDA"
 g_dicTestDbRecord = {"Ticker":"NVDA",
 					"Date":"18-12-2017",
 					"Samples":[
@@ -58,13 +60,16 @@ g_dicTestDbRecord = {"Ticker":"NVDA",
 def g_pollingLoop(_oScheduler): 
 
 	# Get current date
-	oCurDateTime = g_getCurDateTime() # -> TO DO
+	oCurDateTime = g_getCurDateTime()
 
 	# Check if it is time to get data (open market, mid-day, close market)
-	if g_isItTime2Sample(oCurDateTime): # -> TO DO
+	if g_isItTime2Sample(oCurDateTime):
 		
-		# Sample Data
-		g_sampleDataPoint() # -> TO DO
+		# Sample Data Point
+		fDataPoint = g_sampleDataPoint() # -> TO DO: Get real data from service
+
+		# Push to DB
+		 g_pushToDb(oCurDateTime,fDataPoint) # -> TO DO
 
 		# IF Enough Data Samples
 		if g_gotEnoughSamples(): # -> TO DO
@@ -86,7 +91,6 @@ def g_pollingLoop(_oScheduler):
 	# Call PollingLoop again and for ever    
 	g_oScheduler.enter(g_iSampleRateSeconds, 1, g_pollingLoop, (_oScheduler,))
 
-
 def g_getCurDateTime():
 
 	# Global
@@ -95,9 +99,11 @@ def g_getCurDateTime():
 	if g_bSimulating == True:
 		oCurDate = g_getSimDateTime()
 	else:
-		oCurDate = time.gmtime()
+		oCurDate = datetime.datetime.now()
 
+	# Print Time
 	print oCurDate
+
 	return oCurDate
 
 def g_isItTime2Sample(_oCurTime):
@@ -109,21 +115,32 @@ def g_isItTime2Sample(_oCurTime):
 	global g_iDataPointsSampled
 	global g_bSimulating
 
-	if g_bSimulating == True:
-
-		if _oCurTime.minute == g_oMarketOpens.minute or _oCurTime.minute == g_oMarketMidDay.minute or _oCurTime.minute == g_oMarketCloses.minute:
-			g_iDataPointsSampled = g_iDataPointsSampled + 1 # Keep track of the number of data points sampled
-			return True
-		else:
-			return False
-		
+	if _oCurTime.minute == g_oMarketOpens.minute or _oCurTime.minute == g_oMarketMidDay.minute or _oCurTime.minute == g_oMarketCloses.minute:
+		g_iDataPointsSampled = g_iDataPointsSampled + 1 # Keep track of the number of data points sampled
+		return True
 	else:
-		print "Not simulating in: g_isItTime2Sample()"
 		return False
 
 def g_sampleDataPoint():
 
-	print "Sample Data Point"
+	# Get data point from 
+	if g_bSimulating == True:
+		fDataPoint = g_getSimDataPoint()
+	else:
+		print "USE API TO GET STOCK PRICE"
+
+	return fDataPoint
+
+def g_pushToDb(_oCurDateTime, _fDataPoint):
+
+	# Get registry from DB
+
+	# Add data point to DB
+
+
+def g_getSimDataPoint():
+
+	return 190.0
 
 def g_gotEnoughSamples():
 
