@@ -44,6 +44,9 @@ class StockData(db.Model):
 	fDayAvg = db.FloatProperty()
 	fPreDayAvg = db.FloatProperty()
 
+# Delete DB
+# db.delete(StockData.all())
+
 ##### Print ALL DB for debug #####
 ##### This code generates a "# StockData is not callable" bellow when we want to create a StockData object
 # AllStockData = StockData.all()
@@ -112,9 +115,6 @@ def g_pollingLoop(_oScheduler):
 		
 		# Sample Data Point
 		fDataPoint = g_sampleDataPoint() # -> TO DO: Get real data from service
-		print "-------------"
-		print fDataPoint
-		print "-------------"
 
 		# Push to DB
 		g_pushToDb(fDataPoint) # -> TO DO
@@ -261,8 +261,6 @@ def g_readyToPredict():
 	return True
 
 def g_predictDataPoint():
-
-	print "Predict the future...!!!"
 
 	if g_bSimulating == True:
 		g_oStockData.fPreDayAvg = 170.0
