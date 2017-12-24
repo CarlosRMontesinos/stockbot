@@ -44,25 +44,17 @@ class StockData(db.Model):
 	fDayAvg = db.FloatProperty()
 	fPreDayAvg = db.FloatProperty()
 
-def func():
-	print "Calling func()"
-	oDataPoint = StockData(sTicker="NVDA1")
-	oDataPoint.fDayAvg = 180.0
-	oDataPoint.fPreDayAvg = 185.0
-	oDataPoint.put()
-
-func()
-
 ##### Print ALL DB for debug #####
-AllStockData = StockData.all()
-for StockData in AllStockData:
-	print StockData.sTicker
-	print StockData.oDateTime
-	print StockData.fPriceOpen
-	print StockData.fPriceMidDay
-	print StockData.fPriceClose
-	print StockData.fDayAvg
-	print StockData.fPreDayAvg
+##### This code generates a "# StockData is not callable" bellow when we want to create a StockData object
+# AllStockData = StockData.all()
+# for StockData in AllStockData:
+# 	print StockData.sTicker
+# 	print StockData.oDateTime
+# 	print StockData.fPriceOpen
+# 	print StockData.fPriceMidDay
+# 	print StockData.fPriceClose
+# 	print StockData.fDayAvg
+# 	print StockData.fPreDayAvg
 
 g_oStockData = None
 g_oPrevStockDataDateTime = datetime.datetime(year=1900, month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -83,7 +75,7 @@ g_oSimStartDate = datetime.datetime(year=2017, month=12, day=18, hour=5, minute=
 g_oSimDateTimeDelta = datetime.timedelta(days=0, hours=0, minutes=0, seconds=5700, microseconds=0)
 g_iDeltaMult = 0
 g_fSimPrice = 100.0
-g_fSimPriceMult = 0
+g_fSimPriceMult = 0.0
 
 # Data sample variables
 DATA_POINTS_NEEDED = 3
@@ -120,9 +112,12 @@ def g_pollingLoop(_oScheduler):
 		
 		# Sample Data Point
 		fDataPoint = g_sampleDataPoint() # -> TO DO: Get real data from service
+		print "-------------"
+		print fDataPoint
+		print "-------------"
 
 		# Push to DB
-		g_pushToDb(oCurDateTime,fDataPoint) # -> TO DO
+		g_pushToDb(fDataPoint) # -> TO DO
 
 		# IF Enough Data Samples
 		if g_gotEnoughSamples(): # -> TO DO
@@ -170,9 +165,7 @@ def g_createStockDataRec():
 	if g_oStockData == None or g_oStockData.oDateTime.date() != g_oPrevStockDataDateTime.date():
 		
 		# Create today's DB record
-		#g_oStockData = StockData.StockData(sTicker = g_sTicker) # StockData doesn't exist in StockData
-		#g_oStockData = StockData(sTicker = g_sTicker) # StockData is not callable
-		g_oStockData = StockData(sTicker = "NVDA") # StockData is not callable
+		g_oStockData = StockData(sTicker = g_sTicker)
 		g_oStockData.put()
 
 	# Update temp StockData DateTime
@@ -194,6 +187,8 @@ def g_isItTime2Sample(_oCurTime):
 
 def g_sampleDataPoint():
 
+	fDataPoint = 0.0
+
 	# Get data point from 
 	if g_bSimulating == True:
 		fDataPoint = g_getSimDataPoint()
@@ -202,7 +197,7 @@ def g_sampleDataPoint():
 
 	return fDataPoint
 
-def g_pushToDb(_oCurDateTime, _fDataPoint):
+def g_pushToDb(_fDataPoint):
 
 	# Globals
 	global g_iDataPointsSampled
@@ -211,41 +206,34 @@ def g_pushToDb(_oCurDateTime, _fDataPoint):
 
 	if g_iDataPointsSampled == 0:
 		# Push stock price at open time
-		if g_bSimulating == True:
-			g_oStockData.fPriceOpen = 100.0
-			g_oStockData.put()
-		else:
-			print "Use API to get stock price"
-
-		# Keep track of the number of data points sampled
-		g_iDataPointsSampled = g_iDataPointsSampled + 1 
+		g_oStockData.fPriceOpen = _fDataPoint
 	elif g_iDataPointsSampled == 1:
 		# Push stock price at mida day
-		if g_bSimulating == True: 
-			g_oStockData.fPriceOpen = 150.0
-			g_oStockData.put()
-		else:
-			print "Use API to get stock price"
-
-		# Keep track of the number of data points sampled
-		g_iDataPointsSampled = g_iDataPointsSampled + 1
+		g_oStockData.fPriceMidDay = _fDataPoint
 	elif g_iDataPointsSampled == 2:
 		# Push stock price at closing time
-		if g_bSimulating == True: 
-			g_oStockData.fPriceOpen = 200.0
-			g_oStockData.put()
-		else:
-			print "Use API to get stock price"
-
-		# Keep track of the number of data points sampled
-		g_iDataPointsSampled = g_iDataPointsSampled + 1
-		 # Reset number of samples
+		g_oStockData.fPriceClose = _fDataPoint
 	else:
 		print "In g_pushToDb() -> we should never be here...!!!"
 
+	# Push date to DB
+	g_oStockData.put()
+	# Keep track of the number of data points sampled
+	g_iDataPointsSampled = g_iDataPointsSampled + 1
+	 # Reset number of samples
+
 def g_getSimDataPoint():
-	print "Hello"
-	return 190.0
+	
+	global g_fSimPriceMult
+	global g_fSimPrice
+
+	fSimPrice = g_fSimPrice + g_fSimPriceMult * 50.0 # Adding $50
+	g_fSimPriceMult = g_fSimPriceMult + 1.0
+
+	if g_fSimPriceMult == 3.0:
+		g_fSimPriceMult = 0.0
+
+	return fSimPrice
 
 def g_gotEnoughSamples():
 
@@ -265,7 +253,7 @@ def g_operateOnSamples():
 	global g_oStockData
 
 	# Calculate the average
-	g_oStockData.fDayAvg = (g_oStockData.PriceOpen + g_oStockData.fPriceMidDay + g_oStockData.fPriceClose )/3
+	g_oStockData.fDayAvg = (g_oStockData.fPriceOpen + g_oStockData.fPriceMidDay + g_oStockData.fPriceClose )/3
 	g_oStockData.put()
 
 def g_readyToPredict():
