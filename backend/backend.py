@@ -24,6 +24,8 @@ from google.appengine.ext import db
 g_sTicker = "NVDA"
 
 # https://cloud.google.com/appengine/docs/standard/python/refdocs/google.appengine.ext.db
+# https://cloud.google.com/appengine/docs/standard/python/datastore/modelclass
+# s = Story.gql("WHERE title = :title", title="Little Red Riding Hood")
 # Data Base Record Definition
 # "Ticker":"NVDA",
 # "Date":"18-12-2017",
@@ -84,21 +86,6 @@ g_fSimPriceMult = 0.0
 DATA_POINTS_NEEDED = 3
 g_iDataPointsSampled = 0
 
-
-g_dicTestDbRecord = {"Ticker":"NVDA",
-					"Date":"18-12-2017",
-					"Samples":[
-								{"Time":"","Price":190.0},
-								{"Time":"","Price":190.0},
-								{"Time":"","Price":190.0}
-								],
-					"DayAvg":190.0,
-					"Prediction+1":{
-									"ModelType":"Extrapolation",
-									"PredDayAvg":190.0,
-									"Error":0.0
-									}
-					}
 #######################################################
 
 ### Running Polling Loop ###
@@ -106,31 +93,31 @@ def g_pollingLoop(_oScheduler):
 
 	# Get current date
 	oCurDateTime = g_getCurDateTime()
-
+	print oCurDateTime
 	# Creat today's StockData record
 	g_createStockDataRec()
 
 	# Check if it is time to get data (open market, mid-day, close market)
 	if g_isItTime2Sample(oCurDateTime):
-		
+		print "Called g_isItTime2Sample()"
 		# Sample Data Point
 		fDataPoint = g_sampleDataPoint() # -> TO DO: Get real data from service
-
+		print fDataPoint
 		# Push to DB
 		g_pushToDb(fDataPoint) # -> TO DO
-
+		print "Called g_pushToDb()"
 		# IF Enough Data Samples
 		if g_gotEnoughSamples(): # -> TO DO
-
+			print "Called g_gotEnoughSamples()"
 			# Operate on data collected
 			g_operateOnSamples() # -> TO DO
-
+			print "Called g_operateOnSamples()"
 			# IF we have a model ready
 			if g_readyToPredict(): # -> TO DO
-
+				print "Called g_readyToPredict()"
 				# Apply model and predict
 				g_predictDataPoint() # -> TO DO
-
+				print "Called g_predictDataPoint()"
 			# ELSE continue
 		# ELSE continue	
 	# ELSE continue
@@ -149,9 +136,6 @@ def g_getCurDateTime():
 	else:
 		oCurDate = datetime.datetime.now()
 
-	# Print Time
-	print oCurDate
-
 	return oCurDate
 
 def g_createStockDataRec():
@@ -162,8 +146,17 @@ def g_createStockDataRec():
 #	global StockData
 
 	# Check if we haven't created a DB record to today
-	if g_oStockData == None or g_oStockData.oDateTime.date() != g_oPrevStockDataDateTime.date():
+	if g_oStockData == None:
 		
+		# Create today's DB record
+		g_oStockData = StockData(sTicker = g_sTicker)
+		g_oStockData.put()
+
+	elif g_oStockData.oDateTime.date() != g_oPrevStockDataDateTime.date():
+		
+		# Close the current record
+		del g_oStockData
+
 		# Create today's DB record
 		g_oStockData = StockData(sTicker = g_sTicker)
 		g_oStockData.put()
