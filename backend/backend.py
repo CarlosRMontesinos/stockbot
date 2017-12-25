@@ -39,7 +39,8 @@ g_sTicker = "NVDA"
 
 class StockData(db.Model):
 	sTicker = db.StringProperty()
-	oDateTime = db.DateTimeProperty(auto_now_add=True)
+	oCreationDateTime = db.DateTimeProperty(auto_now_add=True) # It auto populates
+	oDateTime = db.DateTimeProperty()
 	fPriceOpen = db.FloatProperty()
 	fPriceMidDay = db.FloatProperty()
 	fPriceClose = db.FloatProperty()
@@ -68,16 +69,27 @@ g_oPrevStockDataDateTime = datetime.datetime(year=1900, month=1, day=1, hour=0, 
 g_bSimulating = True
 
 g_oScheduler = sched.scheduler(time.time, time.sleep)
-g_iSampleRateSeconds = 3 #Seconds
 
-# Times to sample stock market (PST)
-g_oMarketOpens = datetime.datetime(year=1900, month=1, day=1, hour=6, minute=35, second=0, microsecond=0)
-g_oMarketMidDay = datetime.datetime(year=1900, month=1, day=1, hour=9, minute=45, second=0, microsecond=0)
-g_oMarketCloses = datetime.datetime(year=1900, month=1, day=1, hour=12, minute=55, second=0, microsecond=0)
+if g_bSimulating == True:
+	g_iSampleRateSeconds = 1 #Seconds
+
+	# Times to sample stock market (PST)
+	g_oMarketOpens = datetime.datetime(year=1900, month=1, day=1, hour=6, minute=30, second=0, microsecond=0)
+	g_oMarketMidDay = datetime.datetime(year=1900, month=1, day=1, hour=9, minute=30, second=0, microsecond=0)
+	g_oMarketCloses = datetime.datetime(year=1900, month=1, day=1, hour=13, minute=00, second=0, microsecond=0)
+
+else:
+	g_iSampleRateSeconds = 5 #Seconds
+
+	# Times to sample stock market (PST)
+	g_oMarketOpens = datetime.datetime(year=1900, month=1, day=1, hour=6, minute=35, second=0, microsecond=0)
+	g_oMarketMidDay = datetime.datetime(year=1900, month=1, day=1, hour=9, minute=45, second=0, microsecond=0)
+	g_oMarketCloses = datetime.datetime(year=1900, month=1, day=1, hour=12, minute=55, second=0, microsecond=0)	
 
 # Simulation Variables
-g_oSimStartDate = datetime.datetime(year=2017, month=12, day=18, hour=5, minute=00, second=0, microsecond=0)
-g_oSimDateTimeDelta = datetime.timedelta(days=0, hours=0, minutes=0, seconds=5700, microseconds=0)
+g_oSimStartDate = datetime.datetime(year=2018, month=01, day=01, hour=5, minute=00, second=0, microsecond=0)
+#g_oSimDateTimeDelta = datetime.timedelta(days=0, hours=0, minutes=0, seconds=5700, microseconds=0)
+g_oSimDateTimeDelta = datetime.timedelta(days=0, hours=0, minutes=30, seconds=0, microseconds=0)
 g_iDeltaMult = 0
 g_fSimPrice = 100.0
 g_fSimPriceMult = 0.0
@@ -95,7 +107,7 @@ def g_pollingLoop(_oScheduler):
 	oCurDateTime = g_getCurDateTime()
 	print oCurDateTime
 	# Creat today's StockData record
-	g_createStockDataRec()
+	g_createStockDataRec(oCurDateTime)
 
 	# Check if it is time to get data (open market, mid-day, close market)
 	if g_isItTime2Sample(oCurDateTime):
@@ -138,7 +150,7 @@ def g_getCurDateTime():
 
 	return oCurDate
 
-def g_createStockDataRec():
+def g_createStockDataRec(_oCurDateTime):
 
 	# Global
 	global g_oStockData
@@ -146,20 +158,20 @@ def g_createStockDataRec():
 #	global StockData
 
 	# Check if we haven't created a DB record to today
-	if g_oStockData == None:
-		
-		# Create today's DB record
-		g_oStockData = StockData(sTicker = g_sTicker)
-		g_oStockData.put()
-
-	elif g_oStockData.oDateTime.date() != g_oPrevStockDataDateTime.date():
-		
-		# Close the current record
-		del g_oStockData
+	#if g_oStockData == None or (g_oStockData.oDateTime.date() != g_oPrevStockDataDateTime.date()):
+	if g_oStockData == None or (g_oStockData.oDateTime.date() != _oCurDateTime.date()):
 
 		# Create today's DB record
 		g_oStockData = StockData(sTicker = g_sTicker)
+		g_oStockData.oDateTime = _oCurDateTime
 		g_oStockData.put()
+
+	#debug
+	print "--------"
+	print g_oStockData.oDateTime.date()
+	print _oCurDateTime.date()
+#	print g_oPrevStockDataDateTime.date()
+	print "--------"
 
 	# Update temp StockData DateTime
 	g_oPrevStockDataDateTime = g_oStockData.oDateTime
@@ -173,7 +185,9 @@ def g_isItTime2Sample(_oCurTime):
 	global g_iDataPointsSampled
 	global g_bSimulating
 
-	if _oCurTime.minute == g_oMarketOpens.minute or _oCurTime.minute == g_oMarketMidDay.minute or _oCurTime.minute == g_oMarketCloses.minute:
+	if (_oCurTime.hour == g_oMarketOpens.hour and _oCurTime.minute == g_oMarketOpens.minute) or \
+		(_oCurTime.hour == g_oMarketMidDay.hour and _oCurTime.minute == g_oMarketMidDay.minute) or \
+		(_oCurTime.hour == g_oMarketCloses.hour and _oCurTime.minute == g_oMarketCloses.minute):
 		return True
 	else:
 		return False
@@ -272,8 +286,8 @@ def g_getSimDateTime():
 	oSimDate = g_oSimStartDate + g_iDeltaMult * g_oSimDateTimeDelta
 	g_iDeltaMult = g_iDeltaMult + 1
 	
-	if g_iDeltaMult == 7:
-		g_iDeltaMult = 0
+#	if g_iDeltaMult == 7:
+#		g_iDeltaMult = 0
 
 	return oSimDate
 
