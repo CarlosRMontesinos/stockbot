@@ -16,25 +16,12 @@ import webapp2
 import os
 import string
 from google.appengine.ext.webapp import template
-
-WEB_SITE = """<!doctype html> 
-<html> 
-  
-  <body>  
-    <h1 style="width: 100%; text-align: center;" >Josue's Stock Account</h1> 
-
-    <h1 style="width: 100%; text-align: center;" > APPLE </h1>
-    <h2 style="width: 100%; text-align: center;" > Quantity: {quatity} </h2>
-    <h2 style="width: 100%; text-align: center;" > Last Price: {last_price} </h2>
-    <h2 style="width: 100%; text-align: center;" > Current Value: {current_value} </h2> 
-
-  </body>
-</html>"""
+import htmlSite
 
 # Get data from DB
 
 # Look for tockens and replace
-UPDATED_WEB_SITE = string.replace(WEB_SITE, "{quatity}", "WE ROCK")
+UPDATED_WEB_SITE = string.replace(htmlSite.BOOTSTRAP_WEB_SITE, "{quatity}", "WE ROCK")
 UPDATED_WEB_SITE = string.replace(UPDATED_WEB_SITE, "{last_price}", "WE ROCK")
 UPDATED_WEB_SITE = string.replace(UPDATED_WEB_SITE, "{current_value}", "WE ROCK")
 
@@ -51,11 +38,14 @@ UPDATED_WEB_SITE = string.replace(UPDATED_WEB_SITE, "{current_value}", "WE ROCK"
 
 UPDATE_STRING = "UPDATING...!!!"
 
+# -------------- Serve Web-Site -----------------
+
 class RestHandler(webapp2.RequestHandler):
     def get(self):
 
         # Web-site from local file    
-        self.response.write( UPDATED_WEB_SITE )
+        #self.response.write( UPDATED_WEB_SITE ) # Plain HTML
+        self.response.write( htmlSite.BOOTSTRAP_WEB_SITE ) # Bootstrap
         
         # Web-site from Bootstrap
         # print "Calling Main Page"
