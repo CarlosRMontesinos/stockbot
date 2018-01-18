@@ -61,17 +61,17 @@ BOOTSTRAP_WEB_SITE = """<!DOCTYPE html>
                 
                 <!-- User View -->
                 <div class="intro-heading">NVDA</div>
-                <div class="intro-lead-in">Today's Avg: $190.0</div>
-                <div class="intro-lead-in">Tomorrow's Avg*: $210.0</div>
+                <div class="intro-lead-in">Today's Avg: TBD </div>
+                <div class="intro-lead-in">Tomorrow's Avg*: TBD </div>
 
                 <!-- Developer View -->
                 <div class="intro-heading">Ticker</div>
-                <div class="intro-lead-in">Date: TBD</div>
-                <div class="intro-lead-in">Open Price: TBD</div>
-                <div class="intro-lead-in">Day Price: TBD</div>
-                <div class="intro-lead-in">Close Price: TBD</div>
-                <div class="intro-lead-in">Today's Avg: TBD</div>
-                <div class="intro-lead-in">Tomorrow's Avg*: TBD</div>
+                <div class="intro-lead-in">Date: TBD </div>
+                <div class="intro-lead-in">Open Price: TBD </div>
+                <div class="intro-lead-in">Day Price: TBD </div>
+                <div class="intro-lead-in">Close Price: TBD </div>
+                <div class="intro-lead-in">Today's Avg: TBD </div>
+                <div class="intro-lead-in">Tomorrow's Avg*: TBD </div>
 
             </div>
         </div>

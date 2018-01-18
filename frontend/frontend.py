@@ -21,9 +21,9 @@ import htmlSite
 # Get data from DB
 
 # Look for tockens and replace
-UPDATED_WEB_SITE = string.replace(htmlSite.BOOTSTRAP_WEB_SITE, "{quatity}", "WE ROCK")
-UPDATED_WEB_SITE = string.replace(UPDATED_WEB_SITE, "{last_price}", "WE ROCK")
-UPDATED_WEB_SITE = string.replace(UPDATED_WEB_SITE, "{current_value}", "WE ROCK")
+WEB_SITE = htmlSite.BOOTSTRAP_WEB_SITE
+UPDATED_WEB_SITE = string.replace(WEB_SITE, "Date:", "Date: ???")
+
 
 """
 	<!-- Developer View -->
